@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/socket"
@@ -52,7 +51,7 @@ func BareClient(ctx context.Context, gateway, certificateBase64, keyBase64 strin
 // point to your certificate and key.
 func NewClient(ctx context.Context, gateway, certificateFile, keyFile string) (c *Client) {
 	c = new(Client)
-  c.Context = ctx
+	c.Context = ctx
 	c.Gateway = gateway
 	c.CertificateFile = certificateFile
 	c.KeyFile = keyFile
@@ -134,16 +133,8 @@ func (client *Client) ConnectAndWrite(resp *PushNotificationResponse, payload []
 		return err
 	}
 
-	// Create one channel that will serve to handle
-	// timeouts when the notification succeeds.
-	timeoutChannel := make(chan bool, 1)
-	go func() {
-		time.Sleep(time.Second * TimeoutSeconds)
-		timeoutChannel <- true
-	}()
-
 	// This channel will contain the binary response
-	// from Apple in the event of a failure.
+	// from Apple in the event.
 	responseChannel := make(chan []byte, 1)
 	go func() {
 		buffer := make([]byte, 6, 6)
@@ -159,13 +150,14 @@ func (client *Client) ConnectAndWrite(resp *PushNotificationResponse, payload []
 	// identifier -> 4 bytes
 	//
 	// The first byte will always be set to 8.
-	select {
-	case r := <-responseChannel:
+	r := <-responseChannel
+	if r[1] == 0 {
+		resp.Success = true
+		err = nil
+	} else {
 		resp.Success = false
 		resp.AppleResponse = ApplePushResponses[r[1]]
 		err = errors.New(resp.AppleResponse)
-	case <-timeoutChannel:
-		resp.Success = true
 	}
 
 	return err
