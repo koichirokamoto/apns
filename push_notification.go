@@ -75,11 +75,10 @@ func NewAlertDictionary() *AlertDictionary {
 // PushNotification is the wrapper for the Payload.
 // The length fields are computed in ToBytes() and aren't represented here.
 type PushNotification struct {
-	Identifier  int32
-	Expiry      uint32
-	DeviceToken string
-	payload     map[string]interface{}
-	Priority    uint8
+	Identifier int32
+	Expiry     uint32
+	payload    map[string]interface{}
+	Priority   uint8
 }
 
 // NewPushNotification creates and returns a PushNotification structure.
@@ -137,8 +136,8 @@ func (pn *PushNotification) PayloadString() (string, error) {
 
 // ToBytes returns a byte array of the complete PushNotification
 // struct. This array is what should be transmitted to the APN Service.
-func (pn *PushNotification) ToBytes() ([]byte, error) {
-	token, err := hex.DecodeString(pn.DeviceToken)
+func (pn *PushNotification) ToBytes(deviceToken string) ([]byte, error) {
+	token, err := hex.DecodeString(deviceToken)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ var _ APNSClient = &Client{}
 // APNSClient is an APNS client.
 type APNSClient interface {
 	ConnectAndWrite(resp *PushNotificationResponse, payload []byte) (err error)
-	Send(pn *PushNotification) (resp *PushNotificationResponse)
+	Send(pn *PushNotification, deviceToken string) (resp *PushNotificationResponse)
 }
 
 // Client contains the fields necessary to communicate
@@ -60,10 +60,10 @@ func NewClient(ctx context.Context, gateway, certificateFile, keyFile string) (c
 
 // Send connects to the APN service and sends your push notification.
 // Remember that if the submission is successful, Apple won't reply.
-func (client *Client) Send(pn *PushNotification) (resp *PushNotificationResponse) {
+func (client *Client) Send(pn *PushNotification, deviceToken string) (resp *PushNotificationResponse) {
 	resp = new(PushNotificationResponse)
 
-	payload, err := pn.ToBytes()
+	payload, err := pn.ToBytes(deviceToken)
 	if err != nil {
 		resp.Success = false
 		resp.Error = err
